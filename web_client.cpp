@@ -25,7 +25,7 @@ int __cdecl main(int argc, char** argv)
     struct addrinfo* result = NULL,
         * ptr = NULL,
         hints;
-    const char* sendbuf = "GET /Chunked HTTP/1.1\r\nHost: anglesharp.azurewebsites.net\r\nConnection: close\r\n\r\n";
+    const char* sendbuf = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: close\r\n\r\n";
     char recvbuf[DEFAULT_BUFLEN];
     int iResult;
     int recvbuflen = DEFAULT_BUFLEN;
@@ -105,23 +105,6 @@ int __cdecl main(int argc, char** argv)
     iResult = 0;
     ofstream of;
     of.open("1.html", ios::binary | ios::app);
-    /*do {
-        memset(recvbuf, 0, recvbuflen);
-        byterecv = recv(ConnectSocket, recvbuf, recvbuflen, 0);
-        hSz = headerSz(recvbuf);
-        if (byterecv == 0) break;
-
-
-        if (iResult == 0) {
-            //printf("Data:\n%s", recvbuf);
-            of.write(recvbuf + hSz, byterecv - hSz);
-            hSz = 0;
-        }
-        else {
-            of.write(recvbuf, byterecv);
-        }
-        iResult += byterecv;
-    } while (byterecv > 0);*/
 
     do {
         memset(recvbuf, 0, recvbuflen);
@@ -141,7 +124,7 @@ int __cdecl main(int argc, char** argv)
 
 
         if (iResult == 0) {
-            printf("Data:\n%s", recvbuf);
+            //printf("Data:\n%s", recvbuf);
             of.write(recvbuf + hSz + size_len_head, byterecv - hSz - size_len_tail - size_len_head);
             hSz = 0;
         }
