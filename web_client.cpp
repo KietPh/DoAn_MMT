@@ -15,7 +15,7 @@
 #pragma comment (lib, "Ws2_32.lib")
 
 
-#define DEFAULT_BUFLEN 10000
+#define DEFAULT_BUFLEN 2000
 #define DEFAULT_PORT "80"
 
 int __cdecl main(int argc, char** argv)
@@ -25,16 +25,23 @@ int __cdecl main(int argc, char** argv)
     struct addrinfo* result = NULL,
         * ptr = NULL,
         hints;
-    const char* sendbuf = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: close\r\n\r\n";
+    //const char* sendbuf = "GET /httpgallery/chunked/chunkedimage.aspx HTTP/1.1\r\nHost: www.httpwatch.com\r\nConnection: close\r\n\r\n";
     char recvbuf[DEFAULT_BUFLEN];
     int iResult;
     int recvbuflen = DEFAULT_BUFLEN;
-   
+    
+    
+
     // Validate the parameters
     if (argc != 2) {
         printf("usage: %s server-name\n", argv[0]);
         return 1;
     }
+
+
+    form(argv[1]);
+    const char* sendbuf = getSendbuf(argv[1]);
+
 
     // Initialize Winsock
     iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -50,7 +57,7 @@ int __cdecl main(int argc, char** argv)
 
     
     // Resolve the server address and port
-    iResult = getaddrinfo(argv[1], DEFAULT_PORT, &hints, &result);
+    iResult = getaddrinfo(getDomain(argv[1]), DEFAULT_PORT, &hints, &result);
     if (iResult != 0) {
         printf("getaddrinfo failed with error: %d\n", iResult);
         WSACleanup();
@@ -98,47 +105,17 @@ int __cdecl main(int argc, char** argv)
     
     printf("Bytes Sent: %ld\n", iResult);
 
-
-
-    // Receive until the peer closes the connection
-    int byterecv, len, data_len, size_len_head, size_len_tail = 0, hSz = 0;
+    
+    // Download files
     iResult = 0;
-    ofstream of;
-    of.open("1.html", ios::binary | ios::app);
+    
 
-    do {
-        memset(recvbuf, 0, recvbuflen);
-        byterecv = recv(ConnectSocket, recvbuf, recvbuflen, 0);
-        if (byterecv == 0) break;
-        size_len_head = 0;
-        size_len_tail = 2;
-        if (iResult == 0) hSz = headerSz(recvbuf);
-        if (recvbuf[0] == '0' && recvbuf[1] == '\r' && recvbuf[2] == '\n') break;
-        data_len = strlen(recvbuf + hSz);
-        for (int i = 0; i < data_len; i++) {
-            if ((recvbuf + hSz)[i] == '\r' && (recvbuf + hSz)[i + 1] == '\n') {
-                size_len_head = i + 2;
-                break;
-            }
-        }
-
-
-        if (iResult == 0) {
-            //printf("Data:\n%s", recvbuf);
-            of.write(recvbuf + hSz + size_len_head, byterecv - hSz - size_len_tail - size_len_head);
-            hSz = 0;
-        }
-        else {
-            of.write(recvbuf + size_len_head, byterecv - size_len_tail - size_len_head);
-        }
-        iResult += byterecv;
-    } while (byterecv > 0);
-    of.close();
-
+    iResult = downFile(argv[1], recvbuf, recvbuflen, ConnectSocket);
+    
 
 
     if (iResult > 0)
-        printf("\nTotal Bytes received: %d\n", iResult);
+        printf("\nTotal File Bytes received: %d\n", iResult);
     else if (iResult == 0)
         printf("Connection closed\n");
     else
