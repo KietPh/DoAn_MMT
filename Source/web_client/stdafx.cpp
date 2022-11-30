@@ -293,7 +293,7 @@ char* getSendbuf() {
 	char* slash = getRequest();
 	const char* req = " HTTP/1.1\r\nHost: ";
 	char* host = getHost();
-	const char* con = " \r\nConnection: close\r\n\r\n";
+	const char* con = " \r\nConnection: keep-alive\r\n\r\n";
 
 	int len = strlen(get) + strlen(slash) + strlen(req) + strlen(host) + strlen(con);
 	char* des = (char*)malloc(len + 1);
